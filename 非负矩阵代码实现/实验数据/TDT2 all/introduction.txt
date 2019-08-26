@@ -1,0 +1,9 @@
+All categories in TDT2
+In this subset, those documents appearing in two or more categories are removed, thus leaving us with 10,212 documents in total.
+
+Data File:	 contains variables 'fea' and 'gnd'. 'fea' is the document-term matrix, each row is a document; 'gnd' is the label. 
+Doc ID: The corresponding document name in the original TDT2 corpus. 
+Terms: The corresponding feature name (terms) in the original TDT2 corpus. The number is the df of each word. 
+Random Clusters Index Files in Top 56 Categories (In these categories, each category contains no less than 10 documents): 
+These random splits used in our paper D. Cai, et.al., "Locally Consistent Concept Factorization for Document Clustering", IEEE TKDE 2011
+2 Classes | 3 Classes |4 Classes |5 Classes |6 Classes |7 Classes |8 Classes |9 Classes |10 Classes 

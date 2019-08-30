@@ -32,6 +32,9 @@ import networkx as nx
 # import seaborn as sns
 
 
+import split_list
+
+
  
 def matrix_factorisation(R, P, Q, K, steps=5000, alpha=0.0002, beta=0.02):
 	Q = Q.T
@@ -288,14 +291,16 @@ if __name__ == "__main__":
 	# gnmf_itr = 100
 	# neighbours = 5
 	W, H ,error= train(R, 20, 4, 1e-5 )
-	# W, H, list_reconstruction_err_ = gnmf.gnmf(B,A, lambd,gnmf_components,max_iter=gnmf_itr)
-	print ("R的规格：",R.shape)
-	print ("W的规格：",W.shape)
-	print ("H的规格：",H.shape)
-	print (W * H.T)
-
 	R_new = W * H.T
-	R_pred = np.array(R_new.ravel())
+	# W, H, list_reconstruction_err_ = gnmf.gnmf(B,A, lambd,gnmf_components,max_iter=gnmf_itr)
+	print("R的规格：",R.shape)
+	print("W的规格：",W.shape)
+	print("H的规格：",H.shape)
+	print("R_new的规格：",R_new.shape)
+	print(R_new)
+	print(R)
+	R_pred = split_list.splitlist(np.array(R_new.ravel()))
+
 	# n = len(error)
 	# x = range(n)
 	# plot(x, error, color='r', linewidth=3)
@@ -303,14 +308,14 @@ if __name__ == "__main__":
 	# plt.xlabel('generation')
 	# plt.ylabel('loss')
 	# show()
-	print("R_new的规格：",R_new.shape)
+	
 	# print(R_new.dtype)
 	R_true = np.array(R.flatten())
 	
-	print(R_true.shape)
-	print(R_pred.T.shape)
+	print(R_true)
+	print(R_pred)
 
-	result_NMI = metrics.normalized_mutual_info_score(R_true, R_pred.T)
+	result_NMI = metrics.normalized_mutual_info_score(R_true, R_pred)
 	print(result_NMI)
 	# result_NMI2 = NMI(R_new,R)
 	# result_ACC = accuracy_score(R, R_new)

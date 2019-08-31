@@ -299,7 +299,8 @@ if __name__ == "__main__":
 	print("R_new的规格：",R_new.shape)
 	print(R_new)
 	print(R)
-	R_pred = split_list.splitlist(np.array(R_new.ravel()))
+	# R_pred = split_list.splitlist(np.array(R_new.ravel()))//R_new.ravel()出来的结果是一个嵌套的一维数组，按传统的分割数组的方法可以，但是1440*16384的规格太大了，电脑不行。。
+	R_pred = np.array(R_new.ravel())[0]
 
 	# n = len(error)
 	# x = range(n)
@@ -314,6 +315,7 @@ if __name__ == "__main__":
 	
 	print(R_true)
 	print(R_pred)
+	print(isinstance(R_pred,list))
 
 	result_NMI = metrics.normalized_mutual_info_score(R_true, R_pred)
 	print(result_NMI)

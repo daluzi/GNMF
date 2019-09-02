@@ -1,4 +1,4 @@
-# coding: utf-8
+ # coding: utf-8
 import sys
 import codecs
 sys.stdout=codecs.getwriter('utf8')(sys.stdout.detach())
@@ -110,6 +110,7 @@ def read_data():
 		data[d-1]=np.ndarray.flatten(img_ndarray)    #将图像的矩阵形式保存到data中
 		print("data",d,"is",data[d-1])
 		d=d-1
+	data = data.T
 	print("data.shape:",data.shape)
 
 	return data
@@ -219,8 +220,8 @@ def train(V, r, k, e):
 		if err < e:
 			break
 	#权值更新
-		a = (V.T * W + 100 * linMatrix * H)
-		b = (H * W.T * W + 100 * D * H)
+		a = np.dot(V.T,W) + 100 * np.dot(linMatrix,H)
+		b = np.dot(np.dot(H,W.T),W) + 100 * np.dot(D,H)
 		#c = V * H.T
 		#d = W * H * H.T
 		for i_1 in range(n):
@@ -323,4 +324,3 @@ if __name__ == "__main__":
 	# result_ACC = accuracy_score(R, R_new)
 	# print(result_ACC)
 	# print(result_NMI2 )
-

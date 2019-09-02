@@ -162,6 +162,8 @@ def myKNN(S, k, sigma=1.0):
 
     return A
 
+def myQuan():
+	pass
 
 def train(V, r, k, e):
 	m, n = shape(V)

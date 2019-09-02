@@ -27,6 +27,8 @@ import pandas as pd
 from sklearn.datasets.samples_generator import make_circles
 from sklearn.cluster import SpectralClustering, KMeans
 from sklearn.metrics import pairwise_distances
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics.pairwise import pairwise_distances
 from matplotlib import pyplot as plt
 import networkx as nx
 # import seaborn as sns
@@ -148,7 +150,7 @@ def img2vector(filename):
 
 
 def myKNN(S, k, sigma=1.0):
-    N = len(S)
+    N = len(S)#输出的是矩阵的行数
     A = np.zeros((N,N))
 
     for i in range(N):
@@ -162,8 +164,24 @@ def myKNN(S, k, sigma=1.0):
 
     return A
 
-def myQuan():
-	pass
+#计算欧几里得距离（是计算相似度的一种方法，其他方法还有：曼哈顿距离、皮尔逊相关度、Jaccard系数、Tanimoto系数等）
+def euclidean(p,q):
+	#如果两数据集数目不同，计算两者之间都对应有的数
+	same = 0
+	for i in p:
+		if i in q:
+			same += 1
+
+	#计算欧几里德距离,并将其标准化
+	e = sum([(p[i] - q[i]) ** 2 for i in range(same)])
+	return 1/(1+e**.5)#标准化
+
+
+#训练相似矩阵W
+def trainW(v):
+	similarMatrix = pairwise_distances(v,metric="cosine")
+	return similarMatrix
+
 
 def train(V, r, k, e):
 	m, n = shape(V)
@@ -186,9 +204,10 @@ def train(V, r, k, e):
 	# 使用曼哈顿距离。当p=2时，使用的是欧氏距离。对于任意的p，使用闵可夫斯基距离。
 
 	D = []
-	linMatrix = myKNN(V.T,5)
-	print("邻接矩阵：",linMatrix)
-	print("邻接矩阵的规格：",linMatrix.shape)
+	similarMatrix = trainW(V)
+	linMatrix = myKNN(similarMatrix,5)
+	print("最近邻矩阵：",linMatrix)
+	print("最近邻矩阵的规格：",linMatrix.shape)
 	# AV = linMatrix.T
 	# G = nx.Graph()
 	# for i in range(len(linMatrix)):

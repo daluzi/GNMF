@@ -179,7 +179,14 @@ def euclidean(p,q):
 
 #训练相似矩阵W
 def trainW(v):
-	similarMatrix = pairwise_distances(v,metric="cosine")
+	similarMatrix = cosine_similarity(v)
+	m = np.shape(similarMatrix)[0]
+	print(m)
+	for i in range(m):
+		for j in range(m):
+			if j == i:
+				similarMatrix[i][j] = 0
+	print(similarMatrix)
 	return similarMatrix
 
 
@@ -204,7 +211,8 @@ def train(V, r, k, e):
 	# 使用曼哈顿距离。当p=2时，使用的是欧氏距离。对于任意的p，使用闵可夫斯基距离。
 
 	D = []
-	similarMatrix = trainW(V)
+	trainV = V.T
+	similarMatrix = trainW(trainV)
 	linMatrix = myKNN(similarMatrix,5)
 	print("最近邻矩阵：",linMatrix)
 	print("最近邻矩阵的规格：",linMatrix.shape)
@@ -292,6 +300,7 @@ def NMI(A,B):
 
 if __name__ == "__main__":
 	R = read_data()
+	print(R)
 	# print(R)
 	# N = len(R)
 	# M = len(R[0])
@@ -313,7 +322,7 @@ if __name__ == "__main__":
 	# gnmf_itr = 100
 	# neighbours = 5
 	W, H ,error= train(R, 20, 4, 1e-5 )
-	R_new = W * H.T
+	R_new = np.dot(W,H.T)
 	# W, H, list_reconstruction_err_ = gnmf.gnmf(B,A, lambd,gnmf_components,max_iter=gnmf_itr)
 	print("R的规格：",R.shape)
 	print("W的规格：",W.shape)
@@ -321,25 +330,23 @@ if __name__ == "__main__":
 	print("R_new的规格：",R_new.shape)
 	print(R_new)
 	print(R)
+
+	x = H
+	model_kmeans=KMeans(n_clusters=20,random_state=0)  #建立模型对象
+	model_kmeans.fit(x)    #训练聚类模型
+	y_pre=model_kmeans.predict(x)   #预测聚类模型
+
+
 	# R_pred = split_list.splitlist(np.array(R_new.ravel()))//R_new.ravel()出来的结果是一个嵌套的一维数组，按传统的分割数组的方法可以，但是1440*16384的规格太大了，电脑不行。。
-	R_pred = np.array(R_new.ravel())[0]
-
-	# n = len(error)
-	# x = range(n)
-	# plot(x, error, color='r', linewidth=3)
-	# plt.title('Convergence curve')
-	# plt.xlabel('generation')
-	# plt.ylabel('loss')
-	# show()
+	# R_pred = np.array(R_new.ravel())[0]
+	# R_true = np.array(R.flatten())
 	
-	# print(R_new.dtype)
-	R_true = np.array(R.flatten())
-	
-	print(R_true)
-	print(R_pred)
-	print(isinstance(R_pred,list))
+	# print(R_true)
+	# print(R_pred)
+	# print(isinstance(R_pred,list))
 
-	result_NMI = metrics.normalized_mutual_info_score(R_true, R_pred)
+	result_NMI = metrics.adjusted_mutual_info_score(x, y_pre)
+	# print(NMI(R_true,R_pred))
 	print(result_NMI)
 	# result_NMI2 = NMI(R_new,R)
 	# result_ACC = accuracy_score(R, R_new)

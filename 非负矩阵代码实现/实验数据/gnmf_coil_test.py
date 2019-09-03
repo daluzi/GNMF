@@ -92,12 +92,17 @@ def read_data():
 	# df = pd.DataFrame(m["fea"])
 	# print(df.head())
 
-
-	def get_imlist(path):   #此函数读取特定文件夹下的jpg格式图像，返回图片所在路径的列表
+	trueClass = []
+	def get_imlist(path):   #此函数读取特定文件夹下的png格式图像，返回图片所在路径的列表
 		return [os.path.join(path,f) for f in os.listdir(path) if f.endswith('.png')]
 	c=get_imlist(r"./coil-20-proc")    #r""是防止字符串转译
+	print(c[0])
 	print (c)     #这里以list形式输出jpg格式的所有图像（带路径）
 	d=len(c)    #这可以以输出图像个数，如果你的文件夹下有698张图片，那么d为698
+	for i in range(d):
+		newC = c[i].split("j")[1].split("_")[0]
+		trueClass.append(newC)
+	print(trueClass)
 	print("The picture number is",d)
 	
 	 
@@ -115,7 +120,7 @@ def read_data():
 	data = data.T
 	print("data.shape:",data.shape)
 
-	return data
+	return data,trueClass
 	# print(data.type())
 
 
@@ -299,8 +304,11 @@ def NMI(A,B):
 
 
 if __name__ == "__main__":
-	R = read_data()
+	R ,trueClass= read_data()
 	print(R)
+	trueClass = np.matrix(trueClass)
+	trueClass = np.array(trueClass)[0]
+	print(trueClass)
 	# print(R)
 	# N = len(R)
 	# M = len(R[0])
@@ -331,11 +339,11 @@ if __name__ == "__main__":
 	print(R_new)
 	print(R)
 
-	x = H
 	model_kmeans=KMeans(n_clusters=20,random_state=0)  #建立模型对象
-	model_kmeans.fit(x)    #训练聚类模型
-	y_pre=model_kmeans.predict(x)   #预测聚类模型
-
+	model_kmeans.fit(H)    #训练聚类模型
+	y_pre=model_kmeans.predict(H)   #预测聚类模型
+	print("y_pre:",y_pre)
+	print(y_pre.shape)
 
 	# R_pred = split_list.splitlist(np.array(R_new.ravel()))//R_new.ravel()出来的结果是一个嵌套的一维数组，按传统的分割数组的方法可以，但是1440*16384的规格太大了，电脑不行。。
 	# R_pred = np.array(R_new.ravel())[0]
@@ -345,10 +353,10 @@ if __name__ == "__main__":
 	# print(R_pred)
 	# print(isinstance(R_pred,list))
 
-	result_NMI = metrics.adjusted_mutual_info_score(x, y_pre)
+	result_NMI = metrics.normalized_mutual_info_score(trueClass, y_pre)
 	# print(NMI(R_true,R_pred))
-	print(result_NMI)
+	print("NMI",result_NMI)
 	# result_NMI2 = NMI(R_new,R)
-	# result_ACC = accuracy_score(R, R_new)
-	# print(result_ACC)
+	result_ACC = accuracy_score(trueClass, y_pre)
+	print("ACC",result_ACC)
 	# print(result_NMI2 )

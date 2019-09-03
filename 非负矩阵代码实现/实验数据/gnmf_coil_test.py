@@ -92,7 +92,7 @@ def read_data():
 	# df = pd.DataFrame(m["fea"])
 	# print(df.head())
 
-	trueClass = []
+	trueClass = np.zeros((1440,1))
 	def get_imlist(path):   #此函数读取特定文件夹下的png格式图像，返回图片所在路径的列表
 		return [os.path.join(path,f) for f in os.listdir(path) if f.endswith('.png')]
 	c=get_imlist(r"./coil-20-proc")    #r""是防止字符串转译
@@ -101,7 +101,8 @@ def read_data():
 	d=len(c)    #这可以以输出图像个数，如果你的文件夹下有698张图片，那么d为698
 	for i in range(d):
 		newC = c[i].split("j")[1].split("_")[0]
-		trueClass.append(newC)
+		# trueClass.append(newC)
+		trueClass[i][0] = newC
 	print(trueClass)
 	print("The picture number is",d)
 	
@@ -195,7 +196,7 @@ def trainW(v):
 	return similarMatrix
 
 
-def train(V, r, k, e):
+def train(V, r, k):
 	m, n = shape(V)
 	#先随机给定一个W、H，保证矩阵的大小
 	W = mat(random.random((m, r)))
@@ -219,6 +220,7 @@ def train(V, r, k, e):
 	trainV = V.T
 	similarMatrix = trainW(trainV)
 	linMatrix = myKNN(similarMatrix,5)
+	linMatrix = linMatrix.T
 	print("最近邻矩阵：",linMatrix)
 	print("最近邻矩阵的规格：",linMatrix.shape)
 	# AV = linMatrix.T
@@ -240,19 +242,19 @@ def train(V, r, k, e):
 
 	#K为迭代次数
 	for x in range(k):
-		#error
-		V_pre = W * H.T
-		E = V - V_pre
-		#print E
-		err = 0.0
-		for i in range(m):
-			for j in range(n):
-				err += E[i,j] * E[i,j]
-		print(err)
-		data.append(err)
+		# #error
+		# V_pre = W * H.T
+		# E = V - V_pre
+		# #print E
+		# err = 0.0
+		# for i in range(m):
+		# 	for j in range(n):
+		# 		err += E[i,j] * E[i,j]
+		# print(err)
+		# data.append(err)
 
-		if err < e:
-			break
+		# if err < e:
+		# 	break
 	#权值更新
 		a = np.dot(V.T,W) + 100 * np.dot(linMatrix,H)
 		b = np.dot(np.dot(H,W.T),W) + 100 * np.dot(D,H)
@@ -270,7 +272,7 @@ def train(V, r, k, e):
 				if d[i_2, j_2] != 0:
 					W[i_2,j_2] = W[i_2,j_2] * ( c[i_2,j_2] / d[i_2, j_2] )
 
-	return W,H,data
+	return W,H
 
 
 def NMI(A,B):
@@ -307,8 +309,8 @@ if __name__ == "__main__":
 	R ,trueClass= read_data()
 	print(R)
 	trueClass = np.matrix(trueClass)
-	trueClass = np.array(trueClass)[0]
-	print(trueClass)
+	trueClass = np.array(trueClass).T[0]
+	print("trueClass:",trueClass)
 	# print(R)
 	# N = len(R)
 	# M = len(R[0])
@@ -320,24 +322,15 @@ if __name__ == "__main__":
 	# print(nR)
 
 
-
-	data = []
-	# R_new = []
-	# A = []
-	# A = np.zeros(shape=R.shape)
-	# lambd = 100
-	# gnmf_components = 1440
-	# gnmf_itr = 100
-	# neighbours = 5
-	W, H ,error= train(R, 20, 4, 1e-5 )
+	W, H = train(R, 4, 6)
 	R_new = np.dot(W,H.T)
 	# W, H, list_reconstruction_err_ = gnmf.gnmf(B,A, lambd,gnmf_components,max_iter=gnmf_itr)
 	print("R的规格：",R.shape)
 	print("W的规格：",W.shape)
 	print("H的规格：",H.shape)
-	print("R_new的规格：",R_new.shape)
-	print(R_new)
-	print(R)
+	# print("R_new的规格：",R_new.shape)
+	# print(R_new)
+	# print(R)
 
 	model_kmeans=KMeans(n_clusters=20,random_state=0)  #建立模型对象
 	model_kmeans.fit(H)    #训练聚类模型
@@ -355,8 +348,6 @@ if __name__ == "__main__":
 
 	result_NMI = metrics.normalized_mutual_info_score(trueClass, y_pre)
 	# print(NMI(R_true,R_pred))
-	print("NMI",result_NMI)
-	# result_NMI2 = NMI(R_new,R)
-	result_ACC = accuracy_score(trueClass, y_pre)
-	print("ACC",result_ACC)
-	# print(result_NMI2 )
+	print("NMI:",result_NMI)
+	result_ACC = accuracy_score(y_pre, trueClass)
+	print("ACC:",result_ACC)

@@ -209,6 +209,7 @@ def train(V, r, k):
 	D = []
 	trainV = V.T
 	similarMatrix = trainW(trainV)
+	print(similarMatrix.shape)
 	linMatrix = myKNN(similarMatrix,5)
 	print(linMatrix)
 	linMatrix = 100 * linMatrix
@@ -310,19 +311,15 @@ if __name__ == "__main__":
 	# print(nR)
 
 
-	W, H = train(R, 20, 6)
+	W, H = train(R, 4, 6)
 	# R_new = np.dot(W,H.T)
 	# W, H, list_reconstruction_err_ = gnmf.gnmf(B,A, lambd,gnmf_components,max_iter=gnmf_itr)
 	print("R的规格：",R.shape)
 	print("W的规格：",W.shape)
 	print("H的规格：",H.shape)
-	# print("R_new的规格：",R_new.shape)
-	# print(R_new)
-	# print(R)
-
 	model_kmeans=KMeans(n_clusters=20,random_state=0)  #建立模型对象
-	model_kmeans.fit(H)    #训练聚类模型
-	y_pre=model_kmeans.predict(H)   #预测聚类模型
+	    #训练聚类模型
+	y_pre=model_kmeans.fit(H).labels_   #预测聚类模型
 	print("trueClass:",trueClass)
 	print("y_pre:",y_pre)
 	print(y_pre.shape)

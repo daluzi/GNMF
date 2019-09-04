@@ -308,9 +308,7 @@ def NMI(A,B):
 if __name__ == "__main__":
 	R ,trueClass= read_data()
 	print(R)
-	trueClass = np.matrix(trueClass)
 	trueClass = np.array(trueClass).T[0]
-	print("trueClass:",trueClass)
 	# print(R)
 	# N = len(R)
 	# M = len(R[0])
@@ -335,6 +333,7 @@ if __name__ == "__main__":
 	model_kmeans=KMeans(n_clusters=20,random_state=0)  #建立模型对象
 	model_kmeans.fit(H)    #训练聚类模型
 	y_pre=model_kmeans.predict(H)   #预测聚类模型
+	print("trueClass:",trueClass)
 	print("y_pre:",y_pre)
 	print(y_pre.shape)
 

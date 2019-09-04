@@ -23,7 +23,6 @@ from numpy import *
 import os
 from scipy.io import loadmat
 import pandas as pd
-# import gnmf
 from sklearn.datasets.samples_generator import make_circles
 from sklearn.cluster import SpectralClustering, KMeans
 from sklearn.metrics import pairwise_distances
@@ -95,29 +94,29 @@ def read_data():
 	trueClass = np.zeros((1440,1))
 	def get_imlist(path):   #此函数读取特定文件夹下的png格式图像，返回图片所在路径的列表
 		return [os.path.join(path,f) for f in os.listdir(path) if f.endswith('.png')]
-	c=get_imlist(r"./coil-20-proc")    #r""是防止字符串转译
+	c = get_imlist(r"./coil-20-proc")    #r""是防止字符串转译
 	print(c[0])
-	print (c)     #这里以list形式输出jpg格式的所有图像（带路径）
-	d=len(c)    #这可以以输出图像个数，如果你的文件夹下有698张图片，那么d为698
+	print(c)     #这里以list形式输出jpg格式的所有图像（带路径）
+	d = len(c)    #输出图像个数，共有1440张图片，每张是128*128像素，共有20个类
 	for i in range(d):
 		newC = c[i].split("j")[1].split("_")[0]
 		# trueClass.append(newC)
 		trueClass[i][0] = newC
+	trueClass = np.array(trueClass).T[0]
 	print(trueClass)
 	print("The picture number is",d)
 	
 	 
-	data=np.empty((d,128*128)) #建立d*（128,128）的矩阵
-	print(data)
-	while d>0:
-		img=Image.open(c[d-1])  #打开图像
-		
-		#img_ndarray=numpy.asarray(img)
-		img_ndarray=np.asarray(img,dtype='float64')/255  #将图像转化为数组并将像素转化到0-1之间
-		# print(img_ndarray.shape)
-		data[d-1]=np.ndarray.flatten(img_ndarray)    #将图像的矩阵形式保存到data中
-		print("data",d,"is",data[d-1])
-		d=d-1
+	data = np.zeros((d , 128*128)) #建立d*（128,128）的矩阵
+	for i in range(d):
+		# img = Image.open(c[d-1])  #打开图像
+		img = img2vector(c[i - 1])
+		# #img_ndarray = numpy.asarray(img)
+		# img_ndarray = np.asarray(img,dtype='float64')/255  #将图像转化为数组并将像素转化到0-1之间
+		# # print("asd",img_ndarray)
+		# data[d-1] = np.ndarray.flatten(img_ndarray)    #将图像的矩阵形式保存到data中
+		# # print("data",d,"is",data[d-1])
+		data[:,i] = img[0]
 	data = data.T
 	print("data.shape:",data.shape)
 
@@ -138,21 +137,12 @@ def load_data(file_path):
 	return mat(V)
 
 
-def img2vector(filename):
-	"""
-	将图片数据转换为01矩阵。
-	每张图片是128*128像素，也就是一共16384个字节。
-	因此转换的时候，每行表示一个样本，每个样本含16384个字节。
-	"""
-	# 每个样本数据是1024=32*32个字节
-	returnVect = zeros((1,16384))
-	fr = open(filename)
-	# 循环读取128行，128列。
-	for i in range(128):
-		lineStr = fr.readline()
-		for j in range(128):
-			returnVect[0,32*i+j] = int(lineStr[j])
-	return returnVect
+def img2vector(imgFile):
+	img = Image.open(imgFile).convert('L')
+	img_arr = np.array(img, 'i') # 128px * 128px 灰度图像
+	img_normlization = np.round(img_arr/255) # 对灰度值进行归一化
+	img_arr2 = np.reshape(img_normlization, (-1,1)) # 1 * 16384 矩阵
+	return img_arr2
 
 
 def myKNN(S, k, sigma=1.0):
@@ -220,7 +210,8 @@ def train(V, r, k):
 	trainV = V.T
 	similarMatrix = trainW(trainV)
 	linMatrix = myKNN(similarMatrix,5)
-	linMatrix = linMatrix.T
+	print(linMatrix)
+	linMatrix = 100 * linMatrix
 	print("最近邻矩阵：",linMatrix)
 	print("最近邻矩阵的规格：",linMatrix.shape)
 	# AV = linMatrix.T
@@ -235,43 +226,42 @@ def train(V, r, k):
 	# print("加上权重之后的邻接矩阵",quanMatrix)
 
 	# degree matrix
-	D = np.diag(np.sum(linMatrix, axis=1))
+	D = np.diag(np.sum(linMatrix, axis=0))
 	# D = np.diag(np.sum(np.array(AW.todense()), axis=1))
 	print('degree matrix:',D)
 	print("度矩阵的规格：",D.shape)
 
 	#K为迭代次数
 	for x in range(k):
-		# #error
-		# V_pre = W * H.T
-		# E = V - V_pre
-		# #print E
-		# err = 0.0
-		# for i in range(m):
-		# 	for j in range(n):
-		# 		err += E[i,j] * E[i,j]
-		# print(err)
-		# data.append(err)
-
-		# if err < e:
-		# 	break
 	#权值更新
-		a = np.dot(V.T,W) + 100 * np.dot(linMatrix,H)
-		b = np.dot(np.dot(H,W.T),W) + 100 * np.dot(D,H)
-		#c = V * H.T
-		#d = W * H * H.T
+		a = V.T * W + linMatrix * H
+		b = H * W.T * W + D * H
+		# print("a/b",a/b)
+		# print("H",H)
+		# lsasd = (a/b).reshape(20,1440)
+		# Hnew = np.dot(H , lsasd)
+		#
+		# c = V * H
+		# d = W * H.T * H
+		# lasd = (c/d).reshape(20,16384)
+		# Wnew = np.dot(W , lasd)
+		# a = np.multiply(V.T, W) + 100 * np.multiply(linMatrix, H)
+		# b = np.multiply(np.multiply(H, W.T), W) + 100 * np.multiply(D, H)
+		# H = np.multiply(H , asd)
+		# a = np.dot(V.T, W) + 100 * np.dot(linMatrix, H)
+		# b = np.dot(np.dot(H, W.T), W) + 100 * np.dot(D, H)
+		# H = np.multiply(H , a/b)
+		# W = np.multiply(W , c/d)
 		for i_1 in range(n):
 			for j_1 in range(r):
-				if b[i_1,j_1] != 0:
-					H[i_1,j_1] = H[i_1,j_1] * ( a[i_1,j_1] / b[i_1,j_1] ) 
-
+				if b[i_1, j_1] != 0:
+					H[i_1, j_1] = H[i_1, j_1] * (a[i_1, j_1] / max(b[i_1, j_1],1e-10))
 		c = V * H
 		d = W * H.T * H
 		for i_2 in range(m):
 			for j_2 in range(r):
 				if d[i_2, j_2] != 0:
-					W[i_2,j_2] = W[i_2,j_2] * ( c[i_2,j_2] / d[i_2, j_2] )
-
+					W[i_2, j_2] = W[i_2, j_2] * (c[i_2, j_2] / max(d[i_2, j_2],1e-10))
 	return W,H
 
 
@@ -307,8 +297,8 @@ def NMI(A,B):
 
 if __name__ == "__main__":
 	R ,trueClass= read_data()
-	print(R)
-	trueClass = np.array(trueClass).T[0]
+	# print(R)
+
 	# print(R)
 	# N = len(R)
 	# M = len(R[0])
@@ -320,8 +310,8 @@ if __name__ == "__main__":
 	# print(nR)
 
 
-	W, H = train(R, 4, 6)
-	R_new = np.dot(W,H.T)
+	W, H = train(R, 20, 6)
+	# R_new = np.dot(W,H.T)
 	# W, H, list_reconstruction_err_ = gnmf.gnmf(B,A, lambd,gnmf_components,max_iter=gnmf_itr)
 	print("R的规格：",R.shape)
 	print("W的规格：",W.shape)

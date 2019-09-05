@@ -28,9 +28,13 @@ from sklearn.cluster import SpectralClustering, KMeans
 from sklearn.metrics import pairwise_distances
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics.pairwise import pairwise_distances
+from sklearn.preprocessing import  normalize
+from  sklearn.preprocessing import  Normalizer
 from matplotlib import pyplot as plt
 import networkx as nx
 # import seaborn as sns
+from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 
 
 import split_list
@@ -109,14 +113,15 @@ def read_data():
 	 
 	data = np.zeros((d , 128*128)) #建立d*（128,128）的矩阵
 	for i in range(d):
-		# img = Image.open(c[d-1])  #打开图像
-		img = img2vector(c[i - 1])
-		# #img_ndarray = numpy.asarray(img)
-		# img_ndarray = np.asarray(img,dtype='float64')/255  #将图像转化为数组并将像素转化到0-1之间
-		# # print("asd",img_ndarray)
-		# data[d-1] = np.ndarray.flatten(img_ndarray)    #将图像的矩阵形式保存到data中
-		# # print("data",d,"is",data[d-1])
-		data[:,i] = img[0]
+		# print(c[i])
+		img = Image.open(c[i])  #打开图像
+		# img = img2vector(c[i - 1])
+		#img_ndarray = numpy.asarray(img)
+		img_ndarray = np.asarray(img,dtype='float64')/255  #将图像转化为数组并将像素转化到0-1之间
+		# print("asd",img_ndarray)
+		data[i] = np.ndarray.flatten(img_ndarray)    #将图像的矩阵形式保存到data中
+		# print("data",d,"is",data[d-1])
+		# data[:,i] = img[0]
 	data = data.T
 	print("data.shape:",data.shape)
 
@@ -138,11 +143,20 @@ def load_data(file_path):
 
 
 def img2vector(imgFile):
-	img = Image.open(imgFile).convert('L')
-	img_arr = np.array(img, 'i') # 128px * 128px 灰度图像
-	img_normlization = np.round(img_arr/255) # 对灰度值进行归一化
-	img_arr2 = np.reshape(img_normlization, (-1,1)) # 1 * 16384 矩阵
-	return img_arr2
+	# img = Image.open(imgFile).convert('L')
+	# img_arr = np.array(img, 'i') # 128px * 128px 灰度图像
+	# img_normlization = np.round(img_arr/255) # 对灰度值进行归一化
+	# img_arr2 = np.reshape(img_normlization, (-1,1)) # 1 * 16384 矩阵
+	# print(img_arr2.shape)
+	# return img_arr2
+	returnVect = zeros((1, 16384))
+	fr = open(imgFile,'rb')
+	for i in range(128):
+		lineStr = fr.readline()
+		for j in range(128):
+			returnVect[0, 128 * i + j] = int(lineStr[j])
+	print(returnVect)
+	return returnVect
 
 
 def myKNN(S, k, sigma=1.0):
@@ -151,12 +165,21 @@ def myKNN(S, k, sigma=1.0):
 
     for i in range(N):
         dist_with_index = zip(S[i], range(N))
-        dist_with_index = sorted(dist_with_index, key=lambda x:x[0])
-        neighbours_id = [dist_with_index[m][1] for m in range(k+1)] # xi's k nearest neighbours
-
+        dist_with_index = sorted(dist_with_index, key=lambda x:x[0], reverse = True)
+        # print(dist_with_index)
+        neighbours_id = [dist_with_index[m][1] for m in range(k)] # xi's k nearest neighbours
+        # print("neigh",neighbours_id)
         for j in neighbours_id: # xj is xi's neighbour
-            A[i][j] = np.exp(-S[i][j]/2/sigma/sigma)
+            # print(j)
+            A[i][j] = 1
             A[j][i] = A[i][j] # mutually
+        # print(A[i])
+    m = np.shape(A)[0]
+    print(m)
+    for i in range(m):
+        for j in range(m):
+            if j == i:
+                A[i][j] = 0
 
     return A
 
@@ -176,21 +199,23 @@ def euclidean(p,q):
 #训练相似矩阵W
 def trainW(v):
 	similarMatrix = cosine_similarity(v)
-	m = np.shape(similarMatrix)[0]
-	print(m)
-	for i in range(m):
-		for j in range(m):
-			if j == i:
-				similarMatrix[i][j] = 0
-	print(similarMatrix)
+	# similarMatrix = pairwise_distances(v,metric="cosine")
+	# m = np.shape(similarMatrix)[0]
+	# print(m)
+	# for i in range(m):
+	# 	for j in range(m):
+	# 		if j == i:
+	# 			similarMatrix[i][j] = 0
 	return similarMatrix
+
+
 
 
 def train(V, r, k):
 	m, n = shape(V)
 	#先随机给定一个W、H，保证矩阵的大小
-	W = mat(random.random((m, r)))
-	H = mat(random.random((n, r)))
+	W = np.array(random.random((m, r)))
+	H = np.array(random.random((n, r)))
 
 	# 根据p紧邻图制作权重矩阵
 	# neigh = NearestNeighbors(n_neighbors = 5)
@@ -209,10 +234,10 @@ def train(V, r, k):
 	D = []
 	trainV = V.T
 	similarMatrix = trainW(trainV)
-	print(similarMatrix.shape)
-	linMatrix = myKNN(similarMatrix,5)
+	print("similarM",similarMatrix)
+	linMatrix = myKNN(similarMatrix.T,5)
 	print(linMatrix)
-	linMatrix = 100 * linMatrix
+
 	print("最近邻矩阵：",linMatrix)
 	print("最近邻矩阵的规格：",linMatrix.shape)
 	# AV = linMatrix.T
@@ -235,8 +260,8 @@ def train(V, r, k):
 	#K为迭代次数
 	for x in range(k):
 	#权值更新
-		a = V.T * W + linMatrix * H
-		b = H * W.T * W + D * H
+		# a = V.T * W + 100 * linMatrix * H
+		# b = H * W.T * W + 100 * D * H
 		# print("a/b",a/b)
 		# print("H",H)
 		# lsasd = (a/b).reshape(20,1440)
@@ -249,16 +274,18 @@ def train(V, r, k):
 		# a = np.multiply(V.T, W) + 100 * np.multiply(linMatrix, H)
 		# b = np.multiply(np.multiply(H, W.T), W) + 100 * np.multiply(D, H)
 		# H = np.multiply(H , asd)
-		# a = np.dot(V.T, W) + 100 * np.dot(linMatrix, H)
-		# b = np.dot(np.dot(H, W.T), W) + 100 * np.dot(D, H)
+		a = np.dot(V.T, W) + 100 * np.dot(linMatrix, H)
+		b = np.dot(np.dot(H, W.T), W) + 100 * np.dot(D, H)
 		# H = np.multiply(H , a/b)
 		# W = np.multiply(W , c/d)
 		for i_1 in range(n):
 			for j_1 in range(r):
 				if b[i_1, j_1] != 0:
 					H[i_1, j_1] = H[i_1, j_1] * (a[i_1, j_1] / max(b[i_1, j_1],1e-10))
-		c = V * H
-		d = W * H.T * H
+		# c = V * H
+		# d = W * H.T * H
+		c = np.dot(V, H)
+		d = np.dot(np.dot(W, H.T), H)
 		for i_2 in range(m):
 			for j_2 in range(r):
 				if d[i_2, j_2] != 0:
@@ -311,18 +338,25 @@ if __name__ == "__main__":
 	# print(nR)
 
 
-	W, H = train(R, 4, 6)
+	W, H = train(R, 20, 1000)
 	# R_new = np.dot(W,H.T)
 	# W, H, list_reconstruction_err_ = gnmf.gnmf(B,A, lambd,gnmf_components,max_iter=gnmf_itr)
+	# H_final = normalize(H, norm='l1')
+	transformer = Normalizer().fit(H)
+	H_final = transformer.transform(H)
 	print("R的规格：",R.shape)
 	print("W的规格：",W.shape)
 	print("H的规格：",H.shape)
-	model_kmeans=KMeans(n_clusters=20,random_state=0)  #建立模型对象
-	    #训练聚类模型
-	y_pre=model_kmeans.fit(H).labels_   #预测聚类模型
+	print(H)
+	model_kmeans = KMeans(n_clusters=20)  #建立模型对象
+	#训练聚类模型
+	y_pre = model_kmeans.fit(H_final).labels_   #预测聚类模型
 	print("trueClass:",trueClass)
 	print("y_pre:",y_pre)
 	print(y_pre.shape)
+	# for i in range(len(y_pre)):
+	# 	y_pre[i] = y_pre[i] + 1
+	# 	print(y_pre)
 
 	# R_pred = split_list.splitlist(np.array(R_new.ravel()))//R_new.ravel()出来的结果是一个嵌套的一维数组，按传统的分割数组的方法可以，但是1440*16384的规格太大了，电脑不行。。
 	# R_pred = np.array(R_new.ravel())[0]
@@ -335,5 +369,5 @@ if __name__ == "__main__":
 	result_NMI = metrics.normalized_mutual_info_score(trueClass, y_pre)
 	# print(NMI(R_true,R_pred))
 	print("NMI:",result_NMI)
-	result_ACC = accuracy_score(y_pre, trueClass)
+	result_ACC = accuracy_score(trueClass, y_pre)
 	print("ACC:",result_ACC)

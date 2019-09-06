@@ -38,6 +38,10 @@ from sklearn.preprocessing import MinMaxScaler
 
 
 import split_list
+import scipy.io as scio
+from sklearn.decomposition import NMF
+
+
 
 
  
@@ -95,35 +99,46 @@ def read_data():
 	# df = pd.DataFrame(m["fea"])
 	# print(df.head())
 
-	trueClass = np.zeros((1440,1))
-	def get_imlist(path):   #此函数读取特定文件夹下的png格式图像，返回图片所在路径的列表
-		return [os.path.join(path,f) for f in os.listdir(path) if f.endswith('.png')]
-	c = get_imlist(r"./coil-20-proc")    #r""是防止字符串转译
-	print(c[0])
-	print(c)     #这里以list形式输出jpg格式的所有图像（带路径）
-	d = len(c)    #输出图像个数，共有1440张图片，每张是128*128像素，共有20个类
-	for i in range(d):
-		newC = c[i].split("j")[1].split("_")[0]
-		# trueClass.append(newC)
-		trueClass[i][0] = newC
-	trueClass = np.array(trueClass).T[0]
-	print(trueClass)
-	print("The picture number is",d)
-	
-	 
-	data = np.zeros((d , 128*128)) #建立d*（128,128）的矩阵
-	for i in range(d):
-		# print(c[i])
-		img = Image.open(c[i])  #打开图像
-		# img = img2vector(c[i - 1])
-		#img_ndarray = numpy.asarray(img)
-		img_ndarray = np.asarray(img,dtype='float64')/255  #将图像转化为数组并将像素转化到0-1之间
-		# print("asd",img_ndarray)
-		data[i] = np.ndarray.flatten(img_ndarray)    #将图像的矩阵形式保存到data中
-		# print("data",d,"is",data[d-1])
-		# data[:,i] = img[0]
-	data = data.T
-	print("data.shape:",data.shape)
+	# trueClass = np.zeros((1440,1))
+	# def get_imlist(path):   #此函数读取特定文件夹下的png格式图像，返回图片所在路径的列表
+	# 	return [os.path.join(path,f) for f in os.listdir(path) if f.endswith('.png')]
+	# c = get_imlist(r"./coil-20-proc")    #r""是防止字符串转译
+	# print(c[0])
+	# print(c)     #这里以list形式输出jpg格式的所有图像（带路径）
+	# d = len(c)    #输出图像个数，共有1440张图片，每张是128*128像素，共有20个类
+	# for i in range(d):
+	# 	newC = c[i].split("j")[1].split("_")[0]
+	# 	# trueClass.append(newC)
+	# 	trueClass[i][0] = newC
+	# trueClass = np.array(trueClass).T[0]
+	# print(trueClass)
+	# print("The picture number is",d)
+	#
+	#
+	# data = np.zeros((d , 128*128)) #建立d*（128,128）的矩阵
+	# for i in range(d):
+	# 	# print(c[i])
+	# 	img = Image.open(c[i])  #打开图像
+	# 	# img = img2vector(c[i - 1])
+	# 	#img_ndarray = numpy.asarray(img)
+	# 	img_ndarray = np.asarray(img,dtype='float64')/255  #将图像转化为数组并将像素转化到0-1之间
+	# 	# print("asd",img_ndarray)
+	# 	data[i] = np.ndarray.flatten(img_ndarray)    #将图像的矩阵形式保存到data中
+	# 	# print("data",d,"is",data[d-1])
+	# 	# data[:,i] = img[0]
+	# data = data.T
+	# print("data.shape:",data.shape)
+
+	path = 'label.mat'
+	path1 = 'fea.mat'
+	dataA = scio.loadmat(path)
+	dataB = scio.loadmat(path1)
+	# print(dataA.keys())
+	# print(dataB.keys())
+	# print("asdAsdasd",dataB['fea'])
+	# print(dataA['label'])
+	data = dataB['fea']
+	trueClass = dataA['label']
 
 	return data,trueClass
 	# print(data.type())
@@ -198,7 +213,7 @@ def euclidean(p,q):
 
 #训练相似矩阵W
 def trainW(v):
-	similarMatrix = cosine_similarity(v)
+	similarMatrix = cosine_similarity(v.T)
 	# similarMatrix = pairwise_distances(v,metric="cosine")
 	# m = np.shape(similarMatrix)[0]
 	# print(m)
@@ -232,11 +247,10 @@ def train(V, r, k):
 	# 使用曼哈顿距离。当p=2时，使用的是欧氏距离。对于任意的p，使用闵可夫斯基距离。
 
 	D = []
-	trainV = V.T
+	trainV = V
 	similarMatrix = trainW(trainV)
 	print("similarM",similarMatrix)
-	linMatrix = myKNN(similarMatrix.T,5)
-	print(linMatrix)
+	linMatrix = myKNN(similarMatrix,5)
 
 	print("最近邻矩阵：",linMatrix)
 	print("最近邻矩阵的规格：",linMatrix.shape)
@@ -259,6 +273,7 @@ def train(V, r, k):
 
 	#K为迭代次数
 	for x in range(k):
+
 	#权值更新
 		# a = V.T * W + 100 * linMatrix * H
 		# b = H * W.T * W + 100 * D * H
@@ -281,7 +296,7 @@ def train(V, r, k):
 		for i_1 in range(n):
 			for j_1 in range(r):
 				if b[i_1, j_1] != 0:
-					H[i_1, j_1] = H[i_1, j_1] * (a[i_1, j_1] / max(b[i_1, j_1],1e-10))
+					H[i_1, j_1] = H[i_1, j_1] * (a[i_1, j_1] / b[i_1, j_1])
 		# c = V * H
 		# d = W * H.T * H
 		c = np.dot(V, H)
@@ -289,7 +304,7 @@ def train(V, r, k):
 		for i_2 in range(m):
 			for j_2 in range(r):
 				if d[i_2, j_2] != 0:
-					W[i_2, j_2] = W[i_2, j_2] * (c[i_2, j_2] / max(d[i_2, j_2],1e-10))
+					W[i_2, j_2] = W[i_2, j_2] * (c[i_2, j_2] / d[i_2, j_2])
 	return W,H
 
 
@@ -325,6 +340,9 @@ def NMI(A,B):
 
 if __name__ == "__main__":
 	R ,trueClass= read_data()
+	trueClass = np.array(trueClass.T)[0]
+	print("R.shape",R.shape)
+	print("trueClass.shape",trueClass.shape)
 	# print(R)
 
 	# print(R)
@@ -337,13 +355,16 @@ if __name__ == "__main__":
 	# nR = np.dot(np,nQ.T)
 	# print(nR)
 
+	# R_final = normalize(R, norm='l1')
+	# transformer = Normalizer().fit(R)
+	# R_final = transformer.transform(R)
 
-	W, H = train(R, 20, 1000)
-	# R_new = np.dot(W,H.T)
-	# W, H, list_reconstruction_err_ = gnmf.gnmf(B,A, lambd,gnmf_components,max_iter=gnmf_itr)
-	# H_final = normalize(H, norm='l1')
-	transformer = Normalizer().fit(H)
-	H_final = transformer.transform(H)
+	minMax = MinMaxScaler()
+	R_final = minMax.fit_transform(R)
+	W, H = train(R_final.T, 20, 20)
+
+	AnominMax = MinMaxScaler()
+	H_final = AnominMax.fit_transform(H)
 	print("R的规格：",R.shape)
 	print("W的规格：",W.shape)
 	print("H的规格：",H.shape)
@@ -365,9 +386,11 @@ if __name__ == "__main__":
 	# print(R_true)
 	# print(R_pred)
 	# print(isinstance(R_pred,list))
-
 	result_NMI = metrics.normalized_mutual_info_score(trueClass, y_pre)
 	# print(NMI(R_true,R_pred))
 	print("NMI:",result_NMI)
 	result_ACC = accuracy_score(trueClass, y_pre)
 	print("ACC:",result_ACC)
+	NMFmodel = NMF(n_components=20, init='random', random_state=0)
+	NMFW = NMFmodel.fit_transform(R.T)
+	NMFH = NMFmodel.components_

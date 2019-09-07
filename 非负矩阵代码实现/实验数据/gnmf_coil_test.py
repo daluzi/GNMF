@@ -232,6 +232,9 @@ def train(V, r, k):
 	W = np.array(random.random((m, r)))
 	H = np.array(random.random((n, r)))
 
+	# minMax = MinMaxScaler()
+	# W = minMax.fit_transform(W)
+
 	# 根据p紧邻图制作权重矩阵
 	# neigh = NearestNeighbors(n_neighbors = 5)
 	# neigh.fit(V)
@@ -336,6 +339,13 @@ def NMI(A,B):
 		Hy = Hy - (idBOccurCount/total)*math.log(idBOccurCount/total+eps,2)
 	MIhat = 2.0*MI/(Hx+Hy)
 	return MIhat
+
+# class NMF:
+# 	def __init__(self):
+# 		self.nmf
+#
+# 	def nmf(self):
+# 		add()
 
 
 if __name__ == "__main__":

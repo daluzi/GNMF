@@ -13,9 +13,9 @@ The data set consists of three data sets for the original text:
 
 Totally process：
 
-![1567822925028](C:\Users\pc\AppData\Roaming\Typora\typora-user-images\1567822925028.png)
+![1567822925028](https://github.com/daluzi/GNMF/blob/master/pho/1567822925028.png)
 
-![1567823483218](C:\Users\pc\AppData\Roaming\Typora\typora-user-images\1567823483218.png)
+![1567823483218](https://github.com/daluzi/GNMF/blob/master/pho/1567823483218.png)
 
-![1567823504087](C:\Users\pc\AppData\Roaming\Typora\typora-user-images\1567823504087.png)
+![1567823504087](https://github.com/daluzi/GNMF/blob/master/pho/1567823504087.png)
 

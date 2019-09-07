@@ -9,3 +9,13 @@ The data set consists of three data sets for the original text:
     TDT2
     CMU_PIE_Face
 
+
+
+Totally process：
+
+![1567822925028](C:\Users\pc\AppData\Roaming\Typora\typora-user-images\1567822925028.png)
+
+![1567823483218](C:\Users\pc\AppData\Roaming\Typora\typora-user-images\1567823483218.png)
+
+![1567823504087](C:\Users\pc\AppData\Roaming\Typora\typora-user-images\1567823504087.png)
+

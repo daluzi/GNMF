@@ -39,7 +39,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 import split_list
 import scipy.io as scio
-from sklearn.decomposition import NMF
+# from sklearn.decomposition import NMF
 
 
 
@@ -340,12 +340,17 @@ def NMI(A,B):
 	MIhat = 2.0*MI/(Hx+Hy)
 	return MIhat
 
-# class NMF:
-# 	def __init__(self):
-# 		self.nmf
-#
-# 	def nmf(self):
-# 		add()
+def NMF(X, r, lamb=0.2, maxit=500):
+    if not((r < X.shape[0]) | (r < X.shape[1])):
+        raise ValueError('Erro: Valor de r')
+    H = np.random.rand(r, X.shape[1])
+    D = np.random.rand(X. shape[0], r)
+    Dnorm = D / np.sum(D**2, axis=0)**(.5)
+    for i in range(maxit):
+        H = H * (np.dot(Dnorm.T, X)) / (np.dot(np.dot(Dnorm.T, Dnorm), H) + lamb)
+        D = Dnorm * (np.dot(X, H.T) + Dnorm * (np.dot(np.ones((X.shape[0], X.shape[0])), np.dot(Dnorm, np.dot(H, H.T)) * Dnorm))) / (np.dot(Dnorm, np.dot(H, H.T)) + Dnorm * (np.dot(np.ones((X.shape[0], X.shape[0])), np.dot(X, H.T) * Dnorm)))
+        Dnorm = D / np.sum(D**2, axis=0)**(.5)
+    return D, H
 
 
 if __name__ == "__main__":
@@ -371,8 +376,10 @@ if __name__ == "__main__":
 
 	minMax = MinMaxScaler()
 	R_final = minMax.fit_transform(R)
-	W, H = train(R_final.T, 20, 20)
+	W, H = train(R_final.T, 20, 200)
 
+
+	#对算法得到的H矩阵归一化
 	AnominMax = MinMaxScaler()
 	H_final = AnominMax.fit_transform(H)
 	print("R的规格：",R.shape)
@@ -397,10 +404,22 @@ if __name__ == "__main__":
 	# print(R_pred)
 	# print(isinstance(R_pred,list))
 	result_NMI = metrics.normalized_mutual_info_score(trueClass, y_pre)
-	# print(NMI(R_true,R_pred))
 	print("NMI:",result_NMI)
+
 	result_ACC = accuracy_score(trueClass, y_pre)
 	print("ACC:",result_ACC)
-	NMFmodel = NMF(n_components=20, init='random', random_state=0)
-	NMFW = NMFmodel.fit_transform(R.T)
-	NMFH = NMFmodel.components_
+
+
+	'''
+		NMF
+	'''
+
+	nmfW, nmfH = NMF(R_final.T, 20,lamb=0,maxit=200)
+	#对nmf算法得到的nmfH进行归一化
+	nmfminMax = MinMaxScaler()
+	nmfH_final = nmfminMax.fit_transform(nmfH)
+
+	nmf_pre = model_kmeans.fit(nmfH_final.T).labels_
+	print(nmfH_final.shape)
+	nmfResult_NMI = metrics.normalized_mutual_info_score(trueClass, nmf_pre)
+	print("NMF's NMI:",nmfResult_NMI)

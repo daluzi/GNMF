@@ -376,7 +376,7 @@ if __name__ == "__main__":
 
 	minMax = MinMaxScaler()
 	R_final = minMax.fit_transform(R)
-	W, H = train(R_final.T, 20, 200)
+	W, H = train(R_final.T, 20, 100)
 
 
 	#对算法得到的H矩阵归一化
@@ -406,15 +406,15 @@ if __name__ == "__main__":
 	result_NMI = metrics.normalized_mutual_info_score(trueClass, y_pre)
 	print("NMI:",result_NMI)
 
-	result_ACC = accuracy_score(trueClass, y_pre)
-	print("ACC:",result_ACC)
+	# result_ACC = accuracy_score(trueClass, y_pre)
+	# print("ACC:",result_ACC)
 
 
 	'''
 		NMF
 	'''
 
-	nmfW, nmfH = NMF(R_final.T, 20,lamb=0,maxit=200)
+	nmfW, nmfH = NMF(R_final.T, 20,lamb=0,maxit=100)
 	#对nmf算法得到的nmfH进行归一化
 	nmfminMax = MinMaxScaler()
 	nmfH_final = nmfminMax.fit_transform(nmfH)

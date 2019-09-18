@@ -13,6 +13,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neighbors import NearestNeighbors
 from sklearn.neighbors import kneighbors_graph
 from sklearn import metrics
+from sklearn import preprocessing
 from sklearn.metrics import accuracy_score
 import warnings
 import matplotlib
@@ -37,7 +38,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import MinMaxScaler
 
 
-import split_list
+# import split_list
 import scipy.io as scio
 # from sklearn.decomposition import NMF
 
@@ -215,12 +216,12 @@ def euclidean(p,q):
 def trainW(v):
 	similarMatrix = cosine_similarity(v.T)
 	# similarMatrix = pairwise_distances(v,metric="cosine")
-	# m = np.shape(similarMatrix)[0]
-	# print(m)
-	# for i in range(m):
-	# 	for j in range(m):
-	# 		if j == i:
-	# 			similarMatrix[i][j] = 0
+	m = np.shape(similarMatrix)[0]
+	print(m)
+	for i in range(m):
+		for j in range(m):
+			if j == i:
+				similarMatrix[i][j] = 0
 	return similarMatrix
 
 
@@ -252,7 +253,7 @@ def train(V, r, k):
 	D = []
 	trainV = V
 	similarMatrix = trainW(trainV)
-	print("similarM",similarMatrix)
+	print("similarM.shape:",similarMatrix.shape)
 	linMatrix = myKNN(similarMatrix,5)
 
 	print("最近邻矩阵：",linMatrix)
@@ -406,8 +407,6 @@ if __name__ == "__main__":
 	result_NMI = metrics.normalized_mutual_info_score(trueClass, y_pre)
 	print("NMI:",result_NMI)
 
-	# result_ACC = accuracy_score(trueClass, y_pre)
-	# print("ACC:",result_ACC)
 
 
 	'''
@@ -420,6 +419,6 @@ if __name__ == "__main__":
 	nmfH_final = nmfminMax.fit_transform(nmfH)
 
 	nmf_pre = model_kmeans.fit(nmfH_final.T).labels_
-	print(nmfH_final.shape)
 	nmfResult_NMI = metrics.normalized_mutual_info_score(trueClass, nmf_pre)
 	print("NMF's NMI:",nmfResult_NMI)
+
